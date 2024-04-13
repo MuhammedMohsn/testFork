@@ -1,0 +1,1 @@
+      // imageUrl:resolveReport?.imageUrl?.replace("wwwroot/Uploads/Groups/","")

@@ -1,0 +1,358 @@
+import { FC, useEffect, useState } from "react";
+import { useIntl } from "react-intl";
+import { InputModel } from "../../../../partials/inputs/inputs-typies";
+import DropDownMenu from "./DropDownMenu";
+
+interface props {
+  handleLabelChange: any;
+  label: string;
+  labelEdit: boolean;
+  handleChange: any;
+  value?: string;
+  checked?: boolean;
+  id: string;
+  name?: string;
+  options?: any[];
+  type: string;
+  display?:boolean;
+  placeholder?:string;
+  isRequired?:boolean;
+}
+
+const InputField: FC<props> = (props) => {
+  let intl = useIntl();
+  const [option , setOption] = useState('')
+  
+  const optionsHandler=(newOptions:any)=>{
+    props.handleChange(props.id, newOptions , props.type , props.labelEdit?true:false)
+  }
+ 
+  switch (props.type) {
+    case "text":
+    case "date":
+    case "time":
+      return (
+        <input
+          className="form-control"
+          value={props.value?.toString()}
+          type={props.type}
+          readOnly={props.display}
+          required={props.isRequired}
+          placeholder={props.placeholder}
+          onChange={(e) =>
+            props.handleChange(props.id, e.target.value, props.type,props.labelEdit?true:false)
+          }
+        />
+      );
+    case "radio":
+    case "checkbox":
+      return (
+        <input
+          className="form-check-input mx-2"
+          checked={props.checked}
+          type={props.type}
+          name={props.name}
+          required={props.isRequired}
+          onChange={(e) =>
+            !props.display&&props.handleChange(props.id, e.target.checked, props.type)
+          }
+        />
+      );
+    case "textarea":
+      return (
+        <textarea
+          className="form-control"
+          value={props.value?.toString()}
+          placeholder={props.placeholder}
+          required={props.isRequired}
+          onChange={(e) =>
+            !props.display&&props.handleChange(props.id, e.target.value, props.type,props.labelEdit?true:false)
+          }
+        ></textarea>
+      );
+    case "select":
+      return <div className="d-flex row col-12">
+        <div className={`d-flex  ${props.labelEdit?"col-6":"col-12"} `}>
+          {/* <select
+              name="status"
+              data-hide-search="true"
+              className="form-select form-select-white col-6"
+              value={props.value?.toString()}
+              onChange={(e) =>
+              !props.display && props.handleChange(props.id, e.target.value, props.type )
+              }
+          >
+              {props.options?.map((option) => (<>
+                <option value={option.value}>
+                    <span onClick={() => {alert()}} className="cursor-pointer">{option.text}</span>
+                </option>
+                  <i onClick={() => {alert}} className="fa-solid fa-square-minus"></i>
+                  </>
+              ))}
+          </select> */}
+          <DropDownMenu
+              className="col-12 w-100"
+              options={props.options}
+              option={props.value}
+              setOption={(value:any)=>props.handleChange(props.id, value, props.type)}
+              optionsHandler={optionsHandler}
+              display={props.display}
+              selectionAvailable={props.labelEdit?false:true}
+              placeholder={intl.formatMessage({ id: "Choices" })}
+              required={props.isRequired}
+              
+              />
+        </div>
+      {props.labelEdit?<>
+      <div className="col-1">
+        <i onClick={()=>{
+          if(option){props.handleChange(props.id, option, props.type,props.labelEdit?true:false)
+          setOption('')}
+        }}
+        className="fa-solid fa-angles-right add-select"></i>
+      </div>
+      <div className="d-flex col-5">
+        <input
+            className="form-control col-6"
+            type="text"
+            value={option}
+            onChange={(e)=>setOption(e.target.value)}
+            placeholder={intl.formatMessage({ id: "ChoiceName" })}
+        />
+      </div>
+      </>:null}
+    </div>
+    
+
+      
+    default:
+      return null;
+  }
+};
+
+interface labelProps {
+  editable: boolean;
+  handleLabelChange: any;
+  id: string;
+  label: string;
+  handleRequire:any;
+  isRequired:boolean;
+  labelFor:string
+}
+
+const Label: FC<labelProps> = ({ editable, handleLabelChange, id, label,handleRequire , isRequired ,labelFor }) => {
+  let intl = useIntl();
+
+  const [required, setRequired] = useState(false)
+  const requiredHandler = ()=>{
+    if(editable){
+        setRequired(prev=>!prev)
+        handleRequire(id,!required)
+    }
+  }
+  useEffect(()=>{
+    setRequired(isRequired)
+  },[])
+  return (
+    <>
+      {editable ? <div className="d-flex">
+        <label
+          onInput={(event) => handleLabelChange(event, id, false)}
+          className="input-label"
+          contentEditable
+          suppressContentEditableWarning={true}
+        >
+          {label}
+        </label>
+        {labelFor!='radio' && labelFor!='checkbox' &&
+          <span title={intl.formatMessage({id:"MakeRequeired"})} className={`text-xl required-option ${required&&"active-required"}`} onClick={requiredHandler}>*</span>
+        }
+      </div> : (
+        <label className={`input-label ${isRequired&& (labelFor !== 'radio') &&"required"}`}>{label}</label>
+      )}
+    </>
+  );
+};
+
+// const Input: FC<props> = (props) => {
+//   return (
+//     <input
+//       className="form-control"
+//       value={props.value?.toString()}
+//       type="text"
+//       onChange={(e) => props.handleChange(props.id, e.target.value, "text")}
+//     />
+//   );
+// };
+
+const InputRadio: FC<props> = ({
+  name,
+  labelEdit,
+  handleLabelChange,
+  id,
+  handleChange,
+  label,
+  checked,
+}) => {
+  let intl = useIntl();
+  return (
+    <>
+      <input
+        name={name}
+        className="form-check-input mx-2"
+        type="radio"
+        checked={checked}
+        onChange={(e) => handleChange(id, e.target.checked, "radio")}
+      />
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+    </>
+  );
+};
+
+const InputCheckbox: FC<props> = ({
+  labelEdit,
+  handleLabelChange,
+  id,
+  handleChange,
+  label,
+  checked,
+}) => {
+  let intl = useIntl();
+  return (
+    <>
+      <input
+        className="form-check-input mx-2"
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => handleChange(id, e.target.checked, "checkbox")}
+      />
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+    </>
+  );
+};
+
+const InputDate: FC<props> = ({ handleLabelChange, labelEdit, id }) => {
+  let intl = useIntl();
+  return (
+    <>
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+      <input className="form-control" type="date" />
+    </>
+  );
+};
+
+const InputTime: FC<props> = ({ handleLabelChange, labelEdit, id }) => {
+  let intl = useIntl();
+  return (
+    <>
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+      <input className="form-control" type="time" />
+    </>
+  );
+};
+
+const InputFile: FC<props> = ({ labelEdit, handleLabelChange, id }) => {
+  let intl = useIntl();
+  return (
+    <>
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+      <input className="form-control" type="file" />
+    </>
+  );
+};
+
+const InputDropDown: FC<props> = ({
+  handleLabelChange,
+  labelEdit,
+  id,
+  options,
+}) => {
+  let intl = useIntl();
+  return (
+    <>
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+      <select
+        name="status"
+        data-hide-search="true"
+        className="form-select form-select-white w-100"
+        defaultValue="Online"
+      >
+        {options?.map((option) => (
+          <option>{option}</option>
+        ))}
+      </select>
+    </>
+  );
+};
+
+const InputTextarea: FC<props> = ({ labelEdit, handleLabelChange, id }) => {
+  let intl = useIntl();
+  return (
+    <>
+      <label
+        onInput={(event) => handleLabelChange(event, id, false)}
+        className="input-label"
+        contentEditable={labelEdit}
+        suppressContentEditableWarning={true}
+      >
+        {intl.formatMessage({ id: "FieldName" })}
+      </label>
+      <textarea className="form-control form-control-solid"></textarea>
+    </>
+  );
+};
+
+export {
+  InputField,
+  Label,
+  //   Input,
+  InputRadio,
+  InputCheckbox,
+  InputFile,
+  InputDate,
+  InputTime,
+  InputDropDown,
+  InputTextarea,
+};
